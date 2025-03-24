@@ -3,6 +3,7 @@ import { Gesture } from 'react-native-gesture-handler';
 import {
   Easing,
   runOnJS,
+  SharedValue,
   useAnimatedStyle,
   useSharedValue,
   withDecay,
@@ -53,7 +54,18 @@ export const useGestures = ({
   onDoubleTap = () => {},
   onProgrammaticZoom = () => {},
   onResetAnimationEnd,
-}: ZoomableUseGesturesProps) => {
+  initialFocal:propsInitialFocal, // Now passed from props
+  savedFocal:propsSavedFocal,   // Now passed from props
+  focal:propsFocal,        // Now passed from props
+  savedTranslate:propsSavedTranslate, // Now passed from props
+  translate:propsTranslate,      // Now passed from props
+}: ZoomableUseGesturesProps & {
+  initialFocal?: { x: SharedValue<number>; y: SharedValue<number> };
+  savedFocal?: { x: SharedValue<number>; y: SharedValue<number> };
+  focal?: { x: SharedValue<number>; y: SharedValue<number> };
+  savedTranslate?: { x: SharedValue<number>; y: SharedValue<number> };
+  translate?: { x: SharedValue<number>; y: SharedValue<number> };
+}) => {
   const isInteracting = useRef(false);
   const isPinching = useRef(false);
   const { isPanning, startPan, endPan } = usePanGestureCount();
@@ -61,11 +73,12 @@ export const useGestures = ({
   const savedScale = useSharedValue(1);
   const internalScaleValue = useSharedValue(1);
   const scale = scaleValue ?? internalScaleValue;
-  const initialFocal = { x: useSharedValue(0), y: useSharedValue(0) };
-  const savedFocal = { x: useSharedValue(0), y: useSharedValue(0) };
-  const focal = { x: useSharedValue(0), y: useSharedValue(0) };
-  const savedTranslate = { x: useSharedValue(0), y: useSharedValue(0) };
-  const translate = { x: useSharedValue(0), y: useSharedValue(0) };
+
+  const initialFocal = propsInitialFocal ? propsInitialFocal : { x: useSharedValue(0), y: useSharedValue(0) };
+  const savedFocal = propsSavedFocal ? propsSavedFocal : { x: useSharedValue(0), y: useSharedValue(0) };
+  const focal = propsFocal ? propsFocal : { x: useSharedValue(0), y: useSharedValue(0) };
+  const savedTranslate = propsSavedTranslate ? propsSavedTranslate : { x: useSharedValue(0), y: useSharedValue(0) };
+  const translate = propsTranslate ? propsTranslate : { x: useSharedValue(0), y: useSharedValue(0) };
 
   const { getInteractionId, updateInteractionId } = useInteractionId();
   const { onAnimationEnd } = useAnimationEnd(onResetAnimationEnd);
@@ -84,10 +97,12 @@ export const useGestures = ({
         ...args
       )
     );
+
     initialFocal.x.value = 0;
     initialFocal.y.value = 0;
     savedFocal.x.value = 0;
     savedFocal.y.value = 0;
+
     const lastFocalXValue = focal.x.value;
     focal.x.value = withTiming(0, withTimingConfig, (...args) =>
       onAnimationEnd(
@@ -97,6 +112,7 @@ export const useGestures = ({
         ...args
       )
     );
+
     const lastFocalYValue = focal.y.value;
     focal.y.value = withTiming(0, withTimingConfig, (...args) =>
       onAnimationEnd(
@@ -106,6 +122,7 @@ export const useGestures = ({
         ...args
       )
     );
+
     savedTranslate.x.value = 0;
     savedTranslate.y.value = 0;
     const lastTranslateXValue = translate.x.value;
@@ -117,6 +134,7 @@ export const useGestures = ({
         ...args
       )
     );
+
     const lastTranslateYValue = translate.y.value;
     translate.y.value = withTiming(0, withTimingConfig, (...args) =>
       onAnimationEnd(

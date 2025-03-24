@@ -114,6 +114,11 @@ export type ZoomProps = {
    * @default useSharedValue(1)
    */
   scale?: SharedValue<number>;
+  initialFocal?: { x: SharedValue<number>; y: SharedValue<number> };
+  savedFocal?: { x: SharedValue<number>; y: SharedValue<number> };
+  focal?: { x: SharedValue<number>; y: SharedValue<number> };
+  savedTranslate?: { x: SharedValue<number>; y: SharedValue<number> };
+  translate?: { x: SharedValue<number>; y: SharedValue<number> };
   /**
    * The value of the scale when a double-tap gesture is detected.
    * @default 3
